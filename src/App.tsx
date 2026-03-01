@@ -1,83 +1,71 @@
 import { useState } from "react";
+import { Toaster } from "react-hot-toast";
+import type { Person } from "./models/types";
+import { usePersons } from "./hooks/usePersons";
+import PersonForm from "./components/PersonForm";
+import PersonList from "./components/PersonList";
+import ChatBot from "./components/ChatBot";
 
 function App() {
-  const [age, setAge] = useState("");
-  const [message, setMessage] = useState("");
-  const [response_data, setResponseData] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-    
-    setMessage("");
-    setResponseData("");
-
-    try {
-      const response = await fetch("http://localhost:5000/age", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ age: Number(age) }),
-      });
-
-      const text = await response.text();
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = text;
-      }
-
-      if (response.ok) {
-        setMessage("Age submitted successfully!");
-        setResponseData(typeof data === "string" ? data : JSON.stringify(data));
-        console.log("Response from server:", data);
-        setAge("");
-      } else {
-        setMessage(typeof data === "object" ? data.message : data || "Something went wrong.");
-      }
-    } catch {
-      setMessage("Failed to connect to the server.");
-    }
-  };
+  const { persons, loading, error, addPerson, updatePerson, deletePerson } = usePersons();
+  const [editing, setEditing] = useState<Person | null>(null);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-sm space-y-5"
-      >
-        <h1 className="text-2xl font-bold text-gray-800 text-center">
-          Enter Your Age
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: { borderRadius: "12px", background: "#1e293b", color: "#f8fafc", fontSize: "14px" },
+        }}
+      />
 
-        <input
-          type="number"
-          min={1}
-          max={150}
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          placeholder="Age"
-          required
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            👤 Person Manager
+          </h1>
+          <p className="text-sm text-slate-400 mt-0.5">Manage your contacts easily</p>
+        </div>
+      </header>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors cursor-pointer"
-          
-        >
-          Submit
-        </button>
+      {/* Content — side by side on desktop, stacked on mobile */}
+      <div className="flex flex-col md:flex-row gap-6 px-6 py-8">
+        {/* Left — CRUD */}
+        <div className="w-full md:w-1/2">
+          <div className="max-w-lg space-y-6">
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-4">
+                <span>⚠️</span> {error}
+              </div>
+            )}
 
-       
-        {response_data && (
-          <pre className="bg-red-500 rounded-lg p-3 text-left text-sm text-gray-700 overflow-auto">
-            {response_data}
-          </pre>
-        )}
-      </form>
+            <PersonForm
+              onSubmit={addPerson}
+              onUpdate={updatePerson}
+              editing={editing}
+              onCancel={() => setEditing(null)}
+            />
 
-      
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-8 w-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <PersonList
+                persons={persons}
+                onEdit={(person) => setEditing(person)}
+                onDelete={deletePerson}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Right — ChatBot */}
+        <div className="w-full md:w-1/2">
+          <ChatBot />
+        </div>
+      </div>
     </div>
   );
 }
