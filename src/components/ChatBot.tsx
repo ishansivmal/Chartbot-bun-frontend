@@ -96,16 +96,16 @@ export default function ChatBot() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-              msg.sender === "user"
-                ? "bg-indigo-600 text-white ml-auto rounded-br-sm shadow-sm"
-                : "bg-white text-slate-700 border border-slate-200 rounded-bl-sm shadow-sm"
-            }`}
-          >
-            {msg.text}
-          </div>
+            <div
+              key={msg.id != null ? msg.id : `msg-${messages.indexOf(msg)}`}
+              className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                msg.sender === "user"
+                  ? "bg-indigo-600 text-white ml-auto rounded-br-sm shadow-sm"
+                  : "bg-white text-slate-700 border border-slate-200 rounded-bl-sm shadow-sm"
+              }`}
+            >
+              {msg.text}
+            </div>
         ))}
         {loading && (
           <div className="max-w-[80%] px-4 py-3 bg-white border border-slate-200 rounded-2xl rounded-bl-sm shadow-sm">
